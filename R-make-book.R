@@ -33,7 +33,7 @@ source("R/02-small-inventory.R")
 
 source("R/03-corr-lesson1.R")
 
-source("R/04-prepa-lesson2.R")
+source("R/04-corr-lesson2-1.R")
 
 
 ## Make report ------

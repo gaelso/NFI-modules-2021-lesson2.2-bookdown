@@ -2,7 +2,7 @@
 title: "NFI eLearning Practice Simulation"
 subtitle: |
   | Lesson 2: Simple sampling for carbon
-  | Part 1: Sampling design 
+  | Part 2: Data Analysis 
 author: ""
 date: "Handbook with solutions - Version 1.0 - October 2021"
 subject: "copyright to be defined"
@@ -52,15 +52,13 @@ if (book_format %in% c("html", "latex")) {
 # Cover page {-}
 <!-- '` -->
 
-
-
 `r ifelse(book_format == "html" & with_watermark, "<div class='watermark'>DRAFT</div>", "")`
 
 \  
 
 ```{r img-cover, echo=F, out.width='50%', fig.asp=0.5, fig.align='center', fig.pos = 'H'}
 
-knitr::include_graphics(path = "data/louland/lc-grid10-image.png")
+#knitr::include_graphics(path = "data/louland/lc-grid10-image.png")
 
 ```
 
@@ -77,7 +75,7 @@ knitr::include_graphics(path = "data/louland/lc-grid10-image.png")
 
 **Lesson 2: Simple sampling for carbon**
 
-**Part 1: Sampling design**
+**Part 2: Data analysis**
 
 \  
 

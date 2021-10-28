@@ -12,15 +12,15 @@
 ## Select 10 plots for initial carbon stock #################################
 ##
 
-table(plot$lu_factor)
+table(plot_init$lu_factor)
 
-plot_init <- plot %>% filter(lu_factor == "Evergreen") %>% pull(plot_id)
+plot_sub1 <- plot %>% filter(lu_factor == "Evergreen") %>% pull(plot_id)
 
-plot_select <- sample(1:length(plot_init), 10)
+set.seed(10)
+plot_pos <- sample(1:length(plot_ids), 10)
+plot_sub2 <- plot_sub1[plot_pos]
 
-plot_select <- plot_init[plot_select]
-
-exfi_plot <- plot %>% filter(plot_id %in% plot_select)
+exfi_plot <- plot %>% filter(plot_id %in% plot_sub2)
 
 
 ## Plot and subplot size
@@ -28,14 +28,14 @@ plot_radius    <- 20
 subplot_radius <- 5
 
 ## Filter trees and calc agb
-exfi_tree <- tree %>% filter(plot_id %in% plot_select)
+exfi_tree <- tree_init %>% filter(plot_id %in% plot_select)
 
 
 ##
 ## Calculate AGB for tree plot and forest ###################################
 ##
 
-exfi_tagb<- exfi_tree %>%
+exfi_tagb <- exfi_tree %>%
   left_join(exfi_plot, by = "plot_id") %>%
   left_join(species_list, by = "sp_id") %>%
   left_join(wd_species, by = "sp_name") %>%
