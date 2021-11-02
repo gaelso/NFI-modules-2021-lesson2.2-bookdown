@@ -21,14 +21,16 @@ nplot4_uneven %>%
   filter(lc %in% lc_list) %>%
   summarise(n = sum(n))
 
-## Corr LU coe
-plot_init <- plot_init %>%
-  mutate(lu_code = if_else(lu_code == "DE", "DD", lu_code))
+## Corr LU code
+plot_init2 <- plot_init %>%
+  mutate(lc = if_else(lu_code == "DE", "DD", lu_code)) %>%
+  rename(lc_name = lu_factor) %>%
+  select(-lu_code)
 
 ## Randomly select plots
 plot_list <- map(.x = lc_list, .f = function(x){
   
-  plot_sub <- plot_init %>% filter(lu_code == x) %>% pull(plot_id)
+  plot_sub <- plot_init2 %>% filter(lc == x) %>% pull(plot_id)
   plot_n  <- nplot4_uneven %>% filter(lc == x) %>% pull(n)
   n <- ifelse(length(plot_sub) < plot_n, length(plot_sub), plot_n)
   
@@ -43,7 +45,7 @@ plot_list
 length(plot_list)
 
 ## Subset plot and trees
-plot <- plot_init %>%
+plot <- plot_init2 %>%
   filter(plot_id %in% plot_list)
 
 tree <- tree_init %>%
@@ -64,9 +66,9 @@ tree2 <- tree %>%
 gr_hd <- ggplot(tree2) +
   geom_point(aes(x=tree_dbh, y= tree_height_top, color = as.character(tree_health))) +
   scale_color_viridis_d() +
-  facet_grid(tree_health~lu_code) +
+  #facet_grid(tree_health~lc) +
   theme_bw() +
-  labs(
+  labs( 
     x = "Diameter at breast height (cm)", 
     y = "Tree total height (m)",
     color = "Tree Health"
@@ -74,7 +76,6 @@ gr_hd <- ggplot(tree2) +
 gr_hd
 
 ## Health
-
 tree_out <- tree2 %>%
   filter(tree_health == 0, tree_dbh > 10, tree_height_top < 2)
 
@@ -114,7 +115,7 @@ gr_hd2 <- tree_agb %>%
   geom_point(aes(y = tree_height_top)) +
   geom_line(aes(y = tree_height_chave, color = envir_stress, group = envir_stress)) +
   scale_color_viridis_c() +
-  facet_wrap(~lu_code) +
+  facet_wrap(~lc) +
   theme_bw() +
   labs(
     x = "Diameter at breast height (cm)",
@@ -128,8 +129,8 @@ gr_hd2 <- tree_agb %>%
   ggplot(aes(x = tree_dbh)) +
   geom_point(aes(y = tree_height_top, color = as.character(tree_height_valid))) +
   #scale_color_viridis_d() +
-  #geom_point(aes(y = tree_height_cor), col = "darkred") +
-  facet_grid(tree_height_valid~lu_code) +
+  geom_point(aes(y = tree_height_cor), col = "darkred") +
+  facet_grid(tree_height_valid~lc) +
   theme_bw() +
   labs(
     x = "Diameter at breast height (cm)",
@@ -141,11 +142,9 @@ gr_hd2
 gr_hd3 <- tree_agb %>%
   filter(!(tree_id %in% tree_out$tree_id)) %>%
   ggplot(aes(x = tree_dbh)) +
-  geom_point(aes(y = tree_height_cor, color = tree_height_origin)) +
-  scale_color_manual(values = c("black", "darkred")) +
-  geom_segment(data = . %>% filter(tree_height_valid == 0), aes(xend = tree_dbh, y = tree_height_top, yend= tree_height_cor), col = "darkred") +
-  #geom_line(aes(y = tree_height_chave, color = envir_stress, group = envir_stress)) +
-  facet_wrap(~lu_code) +
+  geom_point(data = . %>% filter(tree_height_valid == 1), aes(y = tree_height_top), shape = 3) +
+  geom_point(aes(y = tree_height_cor), color = "darkred", size = 0.6) +
+  facet_wrap(~lc) +
   theme_bw() +
   labs(
     x = "Diameter at breast height (cm)",
@@ -153,4 +152,71 @@ gr_hd3 <- tree_agb %>%
     color = "Tree Health"
   )
 gr_hd3
+
+gr_hd3 <- tree_agb %>%
+  filter(!(tree_id %in% tree_out$tree_id)) %>%
+  ggplot(aes(x = tree_dbh)) +
+  geom_point(aes(y = tree_height_cor, color = tree_height_origin), size = 0.6) +
+  scale_color_manual(values = c("black", "darkred")) +
+  geom_segment(data = . %>% filter(tree_height_valid == 1), aes(xend = tree_dbh, y = tree_height_top, yend= tree_height_cor), col = "darkred") +
+  #geom_line(aes(y = tree_height_chave, color = envir_stress, group = envir_stress)) +
+  facet_wrap(~lc) +
+  theme_bw() +
+  labs(
+    x = "Diameter at breast height (cm)",
+    y = "Tree total height (m)",
+    color = "Tree Health"
+  )
+gr_hd3
+
+## Check model and ci for one plot
+"md-zzb5" %in% plot$plot_id
+
+tree_agb %>%
+  filter(plot_id == "md-zzb5") %>%
+  ggplot(aes(x = tree_dbh)) +
+  geom_point(aes(y = tree_height_top, color = as.character(tree_height_valid))) +
+  geom_line(aes(y = tree_height_chave), size = 1) +
+  #geom_line(aes(y = tree_height_chave + tree_height_ci)) +
+  #geom_line(aes(y = tree_height_chave - tree_height_ci)) +
+  geom_ribbon(aes(ymin = tree_height_chave - tree_height_ci, ymax = tree_height_chave + tree_height_ci), fill="blue", alpha=0.2) +
+  theme_bw() +
+  labs(
+    x = "Diameter at breast height (cm)",
+    y = "Tree total height (m)",
+    color = "Height validation"
+  )
+
+plot_sub <- plot %>%
+  filter(lc == "EV") %>%
+  pull(plot_id) 
+
+set.seed(10)
+plot_rd <- sample(1:length(plot_sub), 10)
+
+plot_sub <- plot_sub[plot_rd]
+
+walk(plot_sub, function(x){
+  
+  gr <- tree_agb %>%
+    filter(plot_id == x) %>%
+    ggplot(aes(x = tree_dbh)) +
+    geom_point(aes(y = tree_height_top, color = as.character(tree_height_valid))) +
+    geom_line(aes(y = tree_height_chave), size = 1) +
+    #geom_line(aes(y = tree_height_chave + tree_height_ci)) +
+    #geom_line(aes(y = tree_height_chave - tree_height_ci)) +
+    geom_ribbon(aes(ymin = tree_height_chave - tree_height_ci, ymax = tree_height_chave + tree_height_ci), fill="blue", alpha=0.2) +
+    theme_bw() +
+    labs(
+      x = "Diameter at breast height (cm)",
+      y = "Tree total height (m)",
+      color = "Height validation"
+    )
+  print(gr)
+  
+})
+
+
+
+
 

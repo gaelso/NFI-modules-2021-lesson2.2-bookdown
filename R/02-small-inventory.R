@@ -14,13 +14,13 @@
 
 table(plot_init$lu_factor)
 
-plot_sub1 <- plot %>% filter(lu_factor == "Evergreen") %>% pull(plot_id)
+plot_sub1 <- plot_init %>% filter(lu_factor == "Evergreen") %>% pull(plot_id)
 
 set.seed(10)
-plot_pos <- sample(1:length(plot_ids), 10)
+plot_pos <- sample(1:length(plot_sub1), 10)
 plot_sub2 <- plot_sub1[plot_pos]
 
-exfi_plot <- plot %>% filter(plot_id %in% plot_sub2)
+exfi_plot <- plot_init %>% filter(plot_id %in% plot_sub2)
 
 
 ## Plot and subplot size
@@ -28,7 +28,7 @@ plot_radius    <- 20
 subplot_radius <- 5
 
 ## Filter trees and calc agb
-exfi_tree <- tree_init %>% filter(plot_id %in% plot_select)
+exfi_tree <- tree_init %>% filter(plot_id %in% plot_sub2)
 
 
 ##
@@ -111,7 +111,7 @@ exfi_agb <- exfi_pagb %>%
 ## Create random plot locatioon in one forest stand #########################
 ##
 
-set.seed(36)
+set.seed(10)
 sf_exfi <- st_sample(x = sf_lc1 %>% filter(id == 406), size = 10) %>% 
   st_as_sf() %>%
   mutate(id = 1:10) %>%

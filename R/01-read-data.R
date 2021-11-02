@@ -17,7 +17,7 @@ list.files("data/mock-data")
 plot_init <- read_csv("data/mock-data/mock_plot.csv", show_col_types = F)
 tree_init <- read_csv("data/mock-data/mock_tree.csv", show_col_types = F)
 
-species_init <- read_csv("data/mock-data/mock_species.csv", show_col_types = F)
+species_list <- read_csv("data/mock-data/mock_species.csv", show_col_types = F)
 
 wd_species <- read_csv("data/mock-data/mock_wdsp.csv", show_col_types = F)
 wd_genus   <- read_csv("data/mock-data/mock_wdgn.csv", show_col_types = F)
