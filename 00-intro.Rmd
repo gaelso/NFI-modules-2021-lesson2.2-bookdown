@@ -9,9 +9,14 @@
 
 In Lesson 1, we had a quick overview of `Louland` and preliminary data gathered to help us prepare a sampling design and implement an NFI.
 
-In the first part of this lesson 2, we have estimated that measuring around 300 plots, which is our cost constraint, would give us a precision on aboveground biomass of around 10%. We have then tested three "simple" sampling designs and selected the uneven systematic sampling on a 4 x 4 km grid as our optimal design.
+In the first part of this lesson 2, we have estimated that measuring around 300 plots, which is our cost constraint, would give us a precision on aboveground biomass of around 10%. We have then tested two "simple" sampling designs and selected the systematic sampling on a 4 x 4 km grid as our optimal design.
 
 
+::::::{.infobox data-latex=""}
+
+Placeholder for lesson 2 part 2
+
+::::::
 
 
 This interactive module is designed to complement the National Forest Inventory eLearning Modules with practical hands-on exercises on a fictional island that just emerged in the middle of the Atlantic Ocean: `Louland`. The lesson 2 focuses on several sampling methods that we called "simple sampling" as they are based on the <txt-green>simple random sampling statistics</txt-green>. 
