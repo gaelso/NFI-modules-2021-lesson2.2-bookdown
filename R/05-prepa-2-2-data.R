@@ -52,6 +52,37 @@ tree <- tree_init %>%
   filter(plot_id %in% plot_list)
 
 ##
+## Checks ###################################################################
+##
+
+set.seed(36)
+tree2 <- tree %>%
+  left_join(species_list, by = "sp_id") %>%
+  left_join(plot, by = "plot_id") %>%
+  left_join(wd_species, by = "sp_name") %>%
+  left_join(wd_genus, by = "genus") %>%
+  mutate(
+    h_chave    = exp(0.893 - envir_stress + 0.760 * log(tree_dbh) - 0.0340 * (log(tree_dbh))^2),
+    h_residual = exp(rnorm(n = dim(.)[1], mean = 0, sd = 0.243)),
+    h_me       = sample(x = c(rep(1, 9), 2), dim(.)[1], replace = TRUE), ## Random measurement error
+    h_est      = h_chave * h_residual,
+    h          = h_est * h_me,
+    h_ci     = 0.243 * h_chave * 1.96
+  ) %>%
+  mutate(
+    tree_height_valid  = case_when(
+      tree_height_top > h_chave + h_ci ~ "Above CI", 
+      tree_height_top < h_chave - h_ci ~ "Below CI",
+      TRUE ~ "Within CI"
+    ),    
+    tree_height_cor    = if_else(tree_height_valid == 1 | is.na(tree_height_top), h_chave, tree_height_top),
+    tree_height_origin = if_else(tree_height_valid == 1 | is.na(tree_height_top), "model", "data"),
+  )
+
+
+
+
+##
 ## Calculations #############################################################
 ##
 
@@ -134,8 +165,7 @@ gr_hd2 <- tree_agb %>%
   theme_bw() +
   labs(
     x = "Diameter at breast height (cm)",
-    y = "Tree total height (m)",
-    color = "Tree Health"
+    y = "Tree total height (m)"
   )
 gr_hd2
 
