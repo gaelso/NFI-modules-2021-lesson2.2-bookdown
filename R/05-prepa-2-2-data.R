@@ -55,19 +55,25 @@ tree <- tree_init %>%
 ## Checks ###################################################################
 ##
 
+
 set.seed(36)
+
+## make 10% tree measurement H error 
+tree_me <- sample(x = 1:nrow(tree), size = round(nrow(tree) * 0.002)) 
+
 tree2 <- tree %>%
   left_join(species_list, by = "sp_id") %>%
   left_join(plot, by = "plot_id") %>%
   left_join(wd_species, by = "sp_name") %>%
   left_join(wd_genus, by = "genus") %>%
   mutate(
+    tree_num   = 1:nrow(.),
     h_chave    = exp(0.893 - envir_stress + 0.760 * log(tree_dbh) - 0.0340 * (log(tree_dbh))^2),
     h_residual = exp(rnorm(n = dim(.)[1], mean = 0, sd = 0.243)),
-    h_me       = sample(x = c(rep(1, 9), 2), dim(.)[1], replace = TRUE), ## Random measurement error
+    h_me       = if_else(tree_num %in% tree_me, 10, 1), ## Random measurement error h multiplied by 2
     h_est      = h_chave * h_residual,
-    h          = h_est * h_me,
-    h_ci     = 0.243 * h_chave * 1.96
+    h          = if_else(tree_height_top < 2 & tree_dbh > 20, tree_height_top, h_est * h_me),
+    h_ci       = 0.243 * h_chave * 1.96
   ) %>%
   mutate(
     tree_height_valid  = case_when(
@@ -79,7 +85,29 @@ tree2 <- tree %>%
     tree_height_origin = if_else(tree_height_valid == 1 | is.na(tree_height_top), "model", "data"),
   )
 
+tree2 %>%
+  ggplot(aes(x = tree_dbh)) +
+  geom_line(aes(y = h_chave, color = envir_stress, group = envir_stress)) +
+  scale_color_viridis_c()
 
+tree2 %>%
+  ggplot(aes(x = tree_dbh)) +
+  geom_point(aes(y = h_est, color = envir_stress, group = envir_stress), size = 0.6) +
+  scale_color_viridis_c() +
+  facet_grid(tree_health ~ lc)
+
+tree2 %>%
+  ggplot(aes(x = tree_dbh)) +
+  geom_point(aes(y = h, color = envir_stress, group = envir_stress)) +
+  geom_point(data = . %>% filter(h_me == 10), aes(y = h), shape = 21, size = 3, col = "red") +
+  scale_color_viridis_c()
+
+tree2 %>%
+  filter(h_me != 10) %>%
+  ggplot(aes(x = tree_dbh)) +
+  geom_point(aes(y = h, color = envir_stress, group = envir_stress)) +
+  #geom_point(data = . %>% filter(h_me == 10), aes(y = h), shape = 21, size = 3, col = "red") +
+  scale_color_viridis_c()
 
 
 ##
