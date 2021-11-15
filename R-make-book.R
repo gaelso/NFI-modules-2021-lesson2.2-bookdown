@@ -35,6 +35,8 @@ source("R/03-corr-lesson1.R")
 
 source("R/04-corr-lesson2-1.R")
 
+source("R/05-prepa-2-2-data.R")
+
 
 ## Make report ------
 

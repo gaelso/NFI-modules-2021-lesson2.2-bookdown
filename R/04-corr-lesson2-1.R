@@ -19,28 +19,28 @@ sf_points4 <- st_make_grid(sf_lc, cellsize = c(4000, 4000), what = "centers", of
   st_intersection(sf_admin) %>%
   st_as_sf()
 
-set.seed(10)
-sf_points4_uneven <- st_sample(x = sf_grid4, size = rep(1, nrow(sf_points4))) %>%
-  st_as_sf()
-
-sf_plot4_uneven <- sf_points4_uneven %>%
+sf_plot4 <- sf_points4 %>%
   st_join(sf_lc) %>%
   mutate(lc = fct_reorder(lc, lc_id)) %>%
   filter(!is.na(lc))
 
-gr_un4 <- ggplot() +
+gr_plot4 <- ggplot() +
   geom_sf(data = sf_lc, aes(fill = lc), color = NA) +
-  geom_sf(data = sf_grid4, fill = NA, col = "red") +
-  geom_sf(data = sf_plot4_uneven, aes(fill = lc), shape = 21) +
-  geom_sf(data = sf_admin, fill = NA) +
+  geom_sf(data = sf_plot4, aes(fill = lc), shape = 21) +
+  geom_sf(data = sf_grid4, fill = NA, col = "red", size = 0.1) +
+  geom_sf(data = sf_admin, fill= NA) +
   scale_fill_manual(values = pal) +
   labs(fill = "", color = "") +
-  theme_void()
-gr_un4
+  theme_bw()
+gr_plot4
 
-nplot4_uneven <- sf_plot4_uneven %>%
+nplot4 <- sf_plot4 %>%
   as_tibble() %>%
   group_by(lc) %>%
   summarise(n = n())
-nplot4_uneven
+nplot4 
 
+nplot4_total <- nplot4 %>%
+  filter(!(lc %in% c("WA", "NF"))) %>%
+  summarise(n = sum(n))
+nplot4_total

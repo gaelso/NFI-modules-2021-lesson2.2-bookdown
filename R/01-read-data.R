@@ -76,9 +76,25 @@ gr_lc <- ggplot() +
   scale_fill_manual(values = palette1) +
   theme_void() +
   labs(fill = "")
-print(gr_lc)
+#print(gr_lc)
 
 # tmap_mode("view")
 # tmap_options(check.and.fix = TRUE)
 # tm_shape(sf_lc1) + tm_polygons(col = "lc", palette = palette1, popup.vars = c("lc", "id"))
+
+
+
+##
+## Assign data from lesson 2.2 ##############################################
+##
+
+newland_name <- "Louland"
+
+sf_lc     <- sf_lc1
+sf_admin  <- sf_adm1
+sf_topo   <- sf_topo1
+path_data <- "data/louland"
+pal       <- palette1
+
+rm(sf_adm1, sf_lc1, sf_topo1, palette1)
 
