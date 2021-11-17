@@ -76,18 +76,21 @@ sf_group <- sf_plot4 %>%
   group_by(lc) %>%
   mutate(join_id = paste0(lc, "_", row_number())) %>%
   ungroup() %>%
-  as_tibble() %>%
-  select(join_id, plot_id, plot_x, plot_y, crs, plot_long, plot_lat)
+  select(join_id, plot_id, plot_x, plot_y, crs, plot_long, plot_lat, shp_id = id, lc, lc_id, lc_name)
 sf_group
 
+plot_group <- sf_group %>%
+  as_tibble() %>%
+  select(-geometry)
 
 ## Subset plot and trees
 plot_prepa <- plot_init2 %>%
   filter(plot_id %in% plot_list) %>%
-  rename(plot_id_old = plot_id) %>%
   group_by(lc) %>%
   mutate(join_id = paste0(lc, "_", row_number())) %>%
-  left_join(as_tibble(sf_group), by = "join_id")
+  ungroup() %>%
+  select(plot_id_old = plot_id, everything(), -lc, -lc_name) %>%
+  left_join(as_tibble(plot_group), by = "join_id")
 
 
 
@@ -162,6 +165,8 @@ tree_prepa %>%
 ## Assign tree and plot #####################################################
 ##
 
+sf_plot <- sf_group
+
 plot <- plot_prepa %>% 
   select(plot_id, everything(), -plot_id_old, -join_id, -envir_stress)
   
@@ -170,7 +175,7 @@ tree <- tree_prepa %>%
   mutate(tree_id = paste0(plot_id, "-", tree_no)) %>%
   select(plot_id, tree_id, tree_no, tree_dbh, tree_height_top = h, tree_health, sp_id)
 
-rm(lc_list, plot_list, tree_me, sf_group)
+rm(lc_list, plot_list, tree_me, sf_group, plot_group)
 
 
 tree %>%

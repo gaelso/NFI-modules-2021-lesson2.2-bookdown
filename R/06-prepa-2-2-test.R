@@ -40,6 +40,8 @@ tree_h <- tree2 %>%
     )
 
 tree_h %>%
+  filter(tree_height_top > 2) %>%
+  mutate(tree_height_top = if_else(tree_id %in% out_top$tree_id, tree_height_top/10, tree_height_top)) %>%
   ggplot(aes(x = tree_dbh)) +
   geom_point(aes(y = tree_height_top)) +
   geom_line(aes(y = h_check), col = "red") +
@@ -107,14 +109,16 @@ tree_cor3 <- tree_cor %>%
     )
 
 tree_cor3 %>%
+  filter(round((tree_no - 1) / 5) == (tree_no - 1) / 5) %>%
   ggplot(aes(x = tree_dbh)) +
-  geom_point(aes(y = tree_height_top, fill = lc), shape = 21) +
-  geom_point(data = filter(tree_cor3, round((tree_no - 1) / 5) == (tree_no - 1) / 5), aes(y = tree_height_top), col = "darkred") +
+  geom_point(aes(y = tree_height_top, fill = lc), shape = 21, alpha = 0.2) +
+  #geom_point(data = filter(tree_cor3, round((tree_no - 1) / 5) == (tree_no - 1) / 5), aes(y = tree_height_top), col = "darkred") +
   geom_line(aes(y = h_est, color = lc)) +
-  geom_ribbon(aes(ymin = h_est - h_me, ymax = h_est + h_me, fill = lc), alpha = 0.2) +
+  geom_ribbon(aes(ymin = h_est - h_me, ymax = h_est + h_me, fill = lc), alpha = 0.1) +
   scale_color_viridis_d() +
   scale_fill_viridis_d() +
-  facet_wrap(~lc)
+  facet_wrap(~lc) +
+  theme_bw()
 
 
 
@@ -145,25 +149,117 @@ table(tree_wd$tree_wd_level, useNA = "always")
 
 tree_agb <- tree_wd %>%
   mutate(
-    tree_ba  = (tree_dbh / 200)^2 * pi,
-    tree_agb = 0.0673 * (tree_wd * tree_dbh^2 * tree_height_top)^0.976 / 10^3,
+    tree_ba   = (tree_dbh / 200)^2 * pi,
+    tree_surb = tree_wd * (tree_dbh/200)^2 * tree_height_top,
+    tree_agb  = 0.0673 * (tree_wd * tree_dbh^2 * tree_height_top)^0.976 / 10^3,
     subplot_radius = if_else(tree_dbh < 20, 5, 20),
     scale_factor = 10000 / (subplot_radius^2 * pi)
     )
 
 tree_agb %>%
   ggplot(aes(x = tree_dbh, y = tree_agb)) +
-  geom_point()
+  geom_point(aes(fill = lc), shape = 21)
 
 tree_agb %>%
   ggplot(aes(x = tree_ba, y = tree_agb)) +
-  geom_point()
+  geom_point(aes(fill = lc), shape = 21)
+
+tree_agb %>%
+  ggplot(aes(x = tree_surb)) +
+  geom_line(aes(y = tree_agb)) +
+  geom_ribbon(aes(ymin = tree_agb*(1 - 1.96*0.357), ymax = tree_agb*(1 + 1.96*0.357)), fill = "red", alpha = 0.2)
 
 
 
 ## 
-## Plot and forest AGB ######################################################
+## Plot AGB #################################################################
 ##
 
+plot_agb_prepa <- tree_agb %>%
+  group_by(plot_id) %>%
+  summarise(
+    plot_density = sum(scale_factor),
+    plot_ba      = sum(tree_ba * scale_factor),
+    plot_agb     = sum(tree_agb * scale_factor)
+   ) 
 
+plot_agb <- plot_agb_prepa %>%
+  left_join(plot, by = "plot_id")
+
+out_agb <- plot_agb %>%
+  filter(plot_ba > 40 | plot_agb > 500)
+
+plot_agb %>%
+  ggplot(aes(x = plot_ba, y = plot_agb)) +
+  geom_point(aes(fill = lc), shape = 21, size = 2, alpha = 0.7) +
+  ggrepel::geom_label_repel(data = out_agb, aes(label = plot_id), min.segment.length = 0) +
+  scale_fill_viridis_d()
+
+
+tree_out <- tree_agb %>%
+  filter(plot_id %in% out_agb$plot_id)
+
+
+sf_plot_agb <- sf_plot %>% 
+  right_join(plot_agb_prepa, by = "plot_id")
+
+rgb <- col2rgb(pal)
+g <- pal2[1,] * 0.299 + pal2[2,] * 0.587 + pal2[3,] * 0.114
+pal2 <- rgb(g, g, g, maxColorValue=255)
+
+
+gr_plot_agb <- ggplot() +
+  geom_sf(data = sf_lc, aes(fill = lc), color = NA, alpha = 0.8) +
+  geom_sf(data = sf_plot_agb, aes(color = plot_agb), size = 2) +
+  #geom_sf(data = sf_grid4, fill = NA, col = "red", size = 0.1) +
+  geom_sf(data = sf_admin, fill= NA) +
+  scale_fill_manual(values = pal2) +
+  scale_color_viridis_c() +
+  labs(fill = "", color = "") +
+  theme_bw()
+gr_plot_agb
+
+gr_plot4  
+
+
+
+##
+## Forest AGB ###############################################################
+##
+
+forest_agb_tot <- plot_agb %>%
+  summarise(
+    n_plot = n(),
+    mean_agb = mean(plot_agb),
+    sd_agb = sd(plot_agb)
+  ) %>%
+  mutate(
+    me = 1.96 * sd_agb / sqrt(n_plot),
+    lc = "Total")
+forest_agb_tot
+
+forest_agb_lc <- plot_agb %>%
+  group_by(lc) %>%
+  summarise(
+    n_plot = n(),
+    mean_agb = mean(plot_agb),
+    sd_agb = sd(plot_agb)
+  ) %>%
+  mutate(
+    me = 1.96 * sd_agb / sqrt(n_plot),
+    lc = as.character(lc)
+    )
+forest_agb_lc
+
+forest_agb <- bind_rows(forest_agb_lc, forest_agb_tot) %>%
+  mutate(lc = factor(lc, levels = c("WL", "DD", "MD", "EV", "MG", "Total")))
+
+forest_agb %>%
+  ggplot(aes(x = lc, y = mean_agb)) +
+  geom_col(aes(fill = lc), col = "black") +
+  scale_fill_viridis_d(direction = -1) +
+  geom_errorbar(aes(ymin = mean_agb - me, ymax = mean_agb + me), width = 0.3) +
+  geom_label(aes(label = n_plot, y = 8), fill = "white", alpha = 0.3, position = position_nudge(-0.25)) + 
+  theme_bw() +
+  theme(legend.position = "none")
 
